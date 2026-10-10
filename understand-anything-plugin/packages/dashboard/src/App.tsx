@@ -4,6 +4,7 @@ import type { GraphIssue } from "@understand-anything/core/schema";
 import { useDashboardStore } from "./store";
 import GraphView from "./components/GraphView";
 import DomainGraphView from "./components/DomainGraphView";
+import ConceptExplorer from "./components/ConceptExplorer";
 import KnowledgeGraphView from "./components/KnowledgeGraphView";
 import SearchBar from "./components/SearchBar";
 import NodeInfo from "./components/NodeInfo";
@@ -696,7 +697,7 @@ function DashboardContent({
         {/* Graph area */}
         <div className="flex-1 min-w-0 min-h-0 relative">
           {viewMode === "knowledge" ? (
-            <KnowledgeGraphView />
+            graph?.nodes.some(n => n.id.startsWith("ptm:concept:")) ? <ConceptExplorer accessToken={accessToken} /> : <KnowledgeGraphView />
           ) : viewMode === "domain" && domainGraph ? (
             <DomainGraphView />
           ) : (

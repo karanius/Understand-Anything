@@ -11,6 +11,7 @@ import type { Edge, Node } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
 import CustomNode from "./CustomNode";
+import { filterNodes, filterEdges } from "../utils/filters";
 import type { CustomNodeData } from "./CustomNode";
 import { useDashboardStore } from "../store";
 import { NODE_WIDTH, NODE_HEIGHT } from "../utils/layout";
@@ -126,6 +127,8 @@ function KnowledgeGraphViewInner() {
   const knowledgeNodesVisible = useDashboardStore(
     (s) => s.nodeTypeFilters.knowledge !== false,
   );
+  const filters = useDashboardStore((s) => s.filters);
+  const nodeIdToLayerIds = useDashboardStore((s) => s.nodeIdToLayerIds);
   const { t } = useI18n();
   const nextLayoutRequestId = useRef(0);
   const [layoutState, setLayoutState] = useState<LayoutState>({
@@ -154,7 +157,7 @@ function KnowledgeGraphViewInner() {
   const filteredGraph = useMemo((): KnowledgeGraph | null => {
     if (!graph) return null;
 
-    const filteredNodes = graph.nodes.filter((n) => {
+    const filteredNodes = filterNodes(graph.nodes, nodeIdToLayerIds, filters).filter((n) => {
       if (["article", "entity", "topic", "claim", "source"].includes(n.type)) {
         return knowledgeNodesVisible;
       }
@@ -162,12 +165,10 @@ function KnowledgeGraphViewInner() {
     });
 
     const filteredNodeIds = new Set(filteredNodes.map((n) => n.id));
-    const filteredEdges = graph.edges.filter(
-      (e) => filteredNodeIds.has(e.source) && filteredNodeIds.has(e.target),
-    );
+    const filteredEdges = filterEdges(graph.edges, filteredNodeIds, filters);
 
     return { ...graph, nodes: filteredNodes, edges: filteredEdges };
-  }, [graph, knowledgeNodesVisible]);
+  }, [graph, knowledgeNodesVisible, filters, nodeIdToLayerIds]);
 
   const preparedLayout = useMemo(() => {
     if (!filteredGraph) return null;
